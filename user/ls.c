@@ -47,6 +47,9 @@ ls(char *path)
     break;
 
   case T_DIR:
+    // 检查拼接后的路径长度是否会超过 buf 的容量。
+    // 这里预留了路径字符串、斜杠、目录项名以及结尾的空字符所需空间。
+    // 如果路径过长，则打印错误信息并终止当前处理，以避免缓冲区溢出。
     if(strlen(path) + 1 + DIRSIZ + 1 > sizeof buf){
       printf("ls: path too long\n");
       break;
@@ -54,12 +57,12 @@ ls(char *path)
     strcpy(buf, path);
     p = buf+strlen(buf);
     *p++ = '/';
-    while(read(fd, &de, sizeof(de)) == sizeof(de)){
-      if(de.inum == 0)
+    while(read(fd, &de, sizeof(de)) == sizeof(de)){ 
+      if(de.inum == 0) // inode为0代表这个文件被删除了，跳过
         continue;
-      memmove(p, de.name, DIRSIZ);
+      memmove(p, de.name, DIRSIZ); //把文件名拼接到路径后面
       p[DIRSIZ] = 0;
-      if(stat(buf, &st) < 0){
+      if(stat(buf, &st) < 0){ 
         printf("ls: cannot stat %s\n", buf);
         continue;
       }
