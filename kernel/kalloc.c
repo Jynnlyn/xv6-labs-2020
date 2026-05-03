@@ -80,3 +80,25 @@ kalloc(void)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
 }
+
+uint64
+count_free_mem(void)
+{
+  struct run *r;
+  uint64 count = 0; // 用来记录总字节数
+
+  
+  acquire(&kmem.lock);
+  
+  // 从链表头开始遍历
+  r = kmem.freelist;
+  while(r != 0){
+    count += PGSIZE; // 每找到一个空闲页，加上一页的大小 (4096字节)
+    r = r->next;     // 走到下一个节点
+  }
+  
+  // 数完了解锁，让其他进程可以继续申请/释放内存
+  release(&kmem.lock);
+
+  return count;
+}
